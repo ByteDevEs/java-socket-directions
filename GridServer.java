@@ -68,19 +68,21 @@ public class GridServer
 		System.out.println("");
 		System.out.println("");
 		System.out.println("");
-		for(double x = 20; x > -20; x--)
+		for(double x = 10; x > -10; x--)
 		{
-			for(double y = -20; y < 20; y++)
+			for(double y = -10; y < 10; y++)
 			{
 				int count = 0;
+				String nameSaved = "";
 				for(int i = 0; i < socketPosList.size(); i++)
 				{
 					if(socketPosList.get(i).position.x == y && socketPosList.get(i).position.y == x)
 					{
-						count++;		
+						count++;	
+						nameSaved = socketPosList.get(i).socketName;					
 					}
 				}
-				if(count == 0){System.out.print("x");} else{System.out.print("@");}
+				if(count == 0){System.out.print("x");} else{System.out.print(nameSaved.charAt(0));}
 			}
 			System.out.println("");
 		}
@@ -91,7 +93,7 @@ public class GridServer
         String value = "";
         for(int i = 0; i < socketList.size(); i++)
         {
-            value += socketList.get(i).socketPort + ":" + socketList.get(i).position.toString() + ":" + socketList.get(i).direction.toString() + ";";
+            value += socketList.get(i).socketName + ":" + socketList.get(i).position.toString() + ":" + socketList.get(i).direction.toString() + ";";
         }
         return value;
     }
@@ -105,18 +107,28 @@ public class GridServer
             while(!s.isConnected())
             {
             }
-            socketPosList.add(new GridClient.SocketPosition(s, s.getPort(), new GridClient.Vector2(), new GridClient.Vector2()));
-            System.out.println("User connected " + s.getPort() + " (" + socketPosList.size() + ")");
+			Scanner read=new Scanner(s.getInputStream());
+			String name = read.nextLine();
+			int c = 0;
+			for(int i = 0; i < socketPosList.size(); i++)
+			{
+				if(socketPosList.get(i).socketName.equals(name))
+				{
+					c++;
+				}
+			}
+			if(c==0){socketPosList.add(new GridClient.SocketPosition(s, name, new GridClient.Vector2(), new GridClient.Vector2()));}
+			System.out.println("User connected " + name + " (" + socketPosList.size() + ")");
             Thread t = new Thread(() -> {
                 createConnection(server);
             });
             t.start();
-            Scanner read=new Scanner(s.getInputStream());
+            read=new Scanner(s.getInputStream());
             while(read.hasNext())
             {
 				String data = read.nextLine();
 				GridClient.Vector2 dir = new GridClient.Vector2();
-				switch(data)
+				switch(data.split(":")[1])
 				{
 					case "N":
 						dir = new GridClient.Vector2(0,1);
@@ -148,7 +160,8 @@ public class GridServer
 				}
                 for(int i = 0; i < socketPosList.size(); i++)
                 {
-                    if(socketPosList.get(i).socketPort == s.getPort())
+					//System.out.println(socketPosList.get(i).socketName.equals(data.split(":")[0]));
+                    if(socketPosList.get(i).socketName.equals(data.split(":")[0]))
                     {
 						//System.out.println(socketPosList.get(i).socketPort + "---" + Integer.parseInt(data.split(":")[0]));
                         socketPosList.get(i).direction = dir;

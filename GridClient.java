@@ -10,9 +10,13 @@ import java.io.*;
  */
 public class GridClient
 {
+	public static String name;
     public static void main(String[] args)
     {
         System.setProperty ("line.separator","\r\n");
+        System.out.println("Input your name: ");
+		Scanner scanName = new Scanner(System.in);
+		name = scanName.nextLine();
         System.out.println("Connecting...");
         try
         {
@@ -28,13 +32,16 @@ public class GridClient
 
             if(s.isConnected())
             {
+				PrintWriter pWname=new PrintWriter(s.getOutputStream());
+				pWname.println(name);
+				pWname.flush();
                 System.out.println("Connected:");
                 Thread t1 = new Thread(() -> {
                     try {
                         while(s.isConnected()){
                             Scanner send = new Scanner(System.in);
                             PrintWriter pW=new PrintWriter(s.getOutputStream());
-                            pW.println(send.nextLine());
+                            pW.println(name + ":" + send.nextLine());
                             pW.flush();
                         }
                     } catch(Exception e){}
@@ -70,7 +77,7 @@ public class GridClient
             String[] parts = elements[i].split(":");
             returnVal.add(
                 new SocketPosition(
-                    Integer.parseInt(parts[0]),
+                    name,
                     new Vector2(Double.parseDouble(parts[1].split(",")[0]),
                                 Double.parseDouble(parts[1].split(",")[1])
                     ),
@@ -109,28 +116,28 @@ public class GridClient
     public static class SocketPosition
     {
         public final Socket socket;
-        public final int socketPort;
+        public final String socketName;
         public Vector2 position;
         public Vector2 direction;
         
         public SocketPosition()
         {
             socket = new Socket();
-            socketPort = 0;
+            socketName = "";
             position = new Vector2();
             direction = new Vector2();
         }
-        public SocketPosition(int newSocketPort, Vector2 vector2, Vector2 dir)
+        public SocketPosition(String newSocketName, Vector2 vector2, Vector2 dir)
         {
             socket = new Socket();
-            socketPort = newSocketPort;
+            socketName = newSocketName;
             position = vector2;
 			direction = dir;
         }
-        public SocketPosition(Socket newSocket, int newSocketPort, Vector2 vector2, Vector2 dir)
+        public SocketPosition(Socket newSocket, String newSocketName, Vector2 vector2, Vector2 dir)
         {
             socket = newSocket;
-            socketPort = newSocketPort;
+            socketName = newSocketName;
             position = vector2;
             direction = dir;
         }
